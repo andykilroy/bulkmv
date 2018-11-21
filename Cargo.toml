@@ -1,0 +1,8 @@
+[package]
+name = "bulkmv"
+version = "0.1.0"
+authors = ["Andrew Kilroy <7545475+andykilroy@users.noreply.github.com>"]
+
+[dependencies]
+clap = "2.32.0"
+error-chain = "0.12.0"
