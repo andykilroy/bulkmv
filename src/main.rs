@@ -31,7 +31,7 @@ extern crate clap;
 use clap::{Arg, App, SubCommand};
 use std::process;
 use std::path::Path;
-use std::fs::File;
+use std::fs::*;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::string::String;
@@ -82,6 +82,9 @@ fn move_all<P: AsRef<Path>, Q: AsRef<Path>>(srcfiles: &[P], destfiles: &[Q]) -> 
     assert_distinct_paths(true, srcfiles)?;
     assert_distinct_paths(false, destfiles)?;
 
+    for i in 0..len {
+        std::fs::rename(&srcfiles[i], &destfiles[i])?;
+    }
     Ok(())
 }
 
