@@ -9,10 +9,16 @@ mod errors {
             // adapt io errors to this module's errors
             Io(::std::io::Error) #[cfg(unix)];
         }
-        
+
         errors {
             NonCorresponding(t: String) {
                 display("src contents don't match dest contents -- {}", t)
+            }
+            RepeatedSrcPaths(t: String) {
+                display("some source paths are identical, or only differ in case, e.g. {}", t)
+            }
+            RepeatedDestPaths(t: String) {
+                display("some dest paths are identical, or only differ in case, e.g. {}", t)
             }
         }
     }
@@ -29,6 +35,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::string::String;
+use std::collections::BTreeSet;
 
 
 
@@ -72,13 +79,26 @@ fn move_all<P: AsRef<Path>, Q: AsRef<Path>>(srcfiles: &[P], destfiles: &[Q]) -> 
     if len != destfiles.len() {
         return Err(Error::from_kind(ErrorKind::NonCorresponding(format!("src lines: {}, dest lines: {}", len, destfiles.len()))));
     }
-    assert_distinct_paths(srcfiles)?;
-    assert_distinct_paths(destfiles)?;
+    assert_distinct_paths(true, srcfiles)?;
+    assert_distinct_paths(false, destfiles)?;
 
     Ok(())
 }
 
-fn assert_distinct_paths<P: AsRef<Path>>(files: &[P]) -> Result<()> {
+fn assert_distinct_paths<P: AsRef<Path>>(are_source_paths: bool, paths: &[P]) -> Result<()> {
+    let mut s = BTreeSet::<String>::new();
+    for p in paths {
+        if let Some(orig) = p.as_ref().to_str() {
+            s.insert(orig.to_ascii_lowercase());
+        }
+    }
+    if s.len() != paths.len() {
+        if are_source_paths {
+            return Err(Error::from_kind(ErrorKind::RepeatedSrcPaths(format!(""))));
+        } else {
+            return Err(Error::from_kind(ErrorKind::RepeatedDestPaths(format!(""))));
+        }
+    }
     Ok(())
 }
 
