@@ -83,7 +83,7 @@ fn move_all<P: AsRef<Path>, Q: AsRef<Path>>(srcfiles: &[P], destfiles: &[Q]) -> 
     assert_distinct_paths(false, destfiles)?;
 
     for i in 0..len {
-        ensure_dest_dir_exists(&destfiles[i]);
+        ensure_dest_dir_exists(&destfiles[i])?;
         std::fs::rename(&srcfiles[i], &destfiles[i])?;
     }
     Ok(())
