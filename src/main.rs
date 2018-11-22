@@ -83,7 +83,15 @@ fn move_all<P: AsRef<Path>, Q: AsRef<Path>>(srcfiles: &[P], destfiles: &[Q]) -> 
     assert_distinct_paths(false, destfiles)?;
 
     for i in 0..len {
+        ensure_dest_dir_exists(&destfiles[i]);
         std::fs::rename(&srcfiles[i], &destfiles[i])?;
+    }
+    Ok(())
+}
+
+fn ensure_dest_dir_exists<P: AsRef<Path>>(file: P) -> Result<()> {
+    if let Some(parent) = file.as_ref().parent() {
+        create_dir_all(parent)?;
     }
     Ok(())
 }
