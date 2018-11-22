@@ -4,8 +4,19 @@
 extern crate error_chain;
 
 mod errors {
-    // Create the Error, ErrorKind, ResultExt, and Result types
-    error_chain! { }
+    error_chain! {
+        foreign_links {
+            // adapt io errors to this module's errors
+            Io(::std::io::Error) #[cfg(unix)];
+        }
+        
+        errors {
+            NonCorresponding(t: String) {
+                display("src contents don't match dest contents -- {}", t)
+            }
+        }
+    }
+
 }
 
 use errors::*;
@@ -14,6 +25,11 @@ extern crate clap;
 use clap::{Arg, App, SubCommand};
 use std::process;
 use std::path::Path;
+use std::fs::File;
+use std::io::BufReader;
+use std::io::BufRead;
+use std::string::String;
+
 
 
 
@@ -51,10 +67,28 @@ fn start_app() -> Result<()> {
     Ok(())
 }
 
-fn contents_of<P: AsRef<Path>>(file: P) -> Result<Vec<P>> {
-    Ok(vec![])
-}
-
 fn move_all<P: AsRef<Path>, Q: AsRef<Path>>(srcfiles: &[P], destfiles: &[Q]) -> Result<()> {
+    let len = srcfiles.len();
+    if len != destfiles.len() {
+        return Err(Error::from_kind(ErrorKind::NonCorresponding(format!("src lines: {}, dest lines: {}", len, destfiles.len()))));
+    }
+    assert_distinct_paths(srcfiles)?;
+    assert_distinct_paths(destfiles)?;
+
     Ok(())
 }
+
+fn assert_distinct_paths<P: AsRef<Path>>(files: &[P]) -> Result<()> {
+    Ok(())
+}
+
+fn contents_of<P: AsRef<Path>>(filepath: P) -> Result<Vec<String>> {
+    let f = File::open(filepath)?;
+    let reader = BufReader::new(f);
+    let mut pathlist: Vec<String> = vec![];
+    for pathstr in reader.lines() {
+        pathlist.push(pathstr?);
+    }
+    Ok(pathlist)
+}
+
